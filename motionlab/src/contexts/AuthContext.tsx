@@ -18,6 +18,30 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null)
 
+const DEMO_PROFILE: Profile = {
+  id: 'demo-user-id',
+  name: 'Demo Athlete',
+  email: 'demo@motionlab.app',
+  avatar_url: null,
+  age: 26,
+  weight_kg: 75,
+  height_cm: 178,
+  fitness_goal: 'general_fitness',
+  experience_level: 'intermediate',
+  sessions_per_week: 4,
+  equipment: ['Dumbbells', 'Barbell', 'Pull-up bar', 'Full gym access'],
+  injuries: null,
+  calorie_target: 2400,
+  protein_target: 160,
+  dietary_preference: 'No preference',
+  sports: ['table_tennis', 'football'],
+  sport_frequency: {},
+  learning_goals: [],
+  onboarding_complete: true,
+  deload_suggested_at: null,
+  created_at: new Date().toISOString(),
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
@@ -38,10 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const refreshProfile = useCallback(async () => {
+    if (localStorage.getItem('ml_demo_mode') === 'true') return
     if (user) await loadProfile(user.id)
   }, [user, loadProfile])
 
   useEffect(() => {
+    // Demo mode — no Supabase needed
+    if (localStorage.getItem('ml_demo_mode') === 'true') {
+      setUser({ id: 'demo-user-id', email: 'demo@motionlab.app' } as User)
+      setProfile(DEMO_PROFILE)
+      setLoading(false)
+      return
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
@@ -67,6 +100,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [loadProfile])
 
   const signOut = useCallback(async () => {
+    if (localStorage.getItem('ml_demo_mode') === 'true') {
+      localStorage.removeItem('ml_demo_mode')
+      setUser(null)
+      setProfile(null)
+      return
+    }
     await supabase.auth.signOut()
   }, [])
 

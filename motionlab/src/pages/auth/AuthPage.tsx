@@ -298,7 +298,25 @@ export default function AuthPage() {
             </button>
           )}
 
-          <p className="text-xs text-white/15 mt-8 text-center leading-relaxed">
+          {/* Demo mode bypass */}
+          <div className="flex items-center gap-3 mt-6 mb-3">
+            <div className="flex-1 h-px" style={{ background: 'rgba(96,108,56,0.08)' }} />
+            <span className="text-[10px] text-white/15 font-mono uppercase tracking-wider">Preview</span>
+            <div className="flex-1 h-px" style={{ background: 'rgba(96,108,56,0.08)' }} />
+          </div>
+          <button
+            onClick={() => {
+              localStorage.setItem('ml_demo_mode', 'true')
+              window.location.href = '/dashboard'
+            }}
+            className="w-full h-11 flex items-center justify-center gap-2 rounded-[8px] text-sm font-medium transition-all text-white/40 hover:text-white/65"
+            style={{ background: 'rgba(96,108,56,0.04)', border: '1px solid rgba(96,108,56,0.1)' }}
+          >
+            <span className="font-mono text-[10px] text-[#8a9c4a]/60">▶</span>
+            Preview as Demo Athlete — no sign-in needed
+          </button>
+
+          <p className="text-xs text-white/15 mt-6 text-center leading-relaxed">
             By signing up, you agree to our Terms of Service and Privacy Policy.
             MotionLab is not a medical device — content is educational only.
           </p>

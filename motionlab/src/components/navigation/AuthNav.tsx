@@ -57,9 +57,10 @@ function NavSection({ label, icon, links, currentPath }: NavSectionProps) {
         className={cn(
           'flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-sm font-medium transition-colors min-h-[44px]',
           isActive
-            ? 'text-[#264653] bg-[#264653]/8'
-            : 'text-[#374151] hover:text-[#264653] hover:bg-[#264653]/6',
+            ? 'text-[#8a9c4a]'
+            : 'text-white/45 hover:text-white/80',
         )}
+        style={isActive ? { background: 'rgba(96,108,56,0.1)' } : {}}
         aria-expanded={open}
       >
         {icon}
@@ -68,7 +69,8 @@ function NavSection({ label, icon, links, currentPath }: NavSectionProps) {
       </button>
 
       {open && (
-        <div className="absolute top-full left-0 mt-1.5 w-52 bg-white rounded-[10px] border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.12)] py-1.5 z-50">
+        <div className="absolute top-full left-0 mt-1.5 w-52 rounded-[10px] py-1.5 z-50"
+          style={{ background: '#0D1420', border: '1px solid rgba(96,108,56,0.18)', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
           {links.map(link => (
             <Link
               key={link.to}
@@ -77,9 +79,10 @@ function NavSection({ label, icon, links, currentPath }: NavSectionProps) {
               className={cn(
                 'flex items-center px-4 py-2.5 text-sm transition-colors min-h-[44px]',
                 currentPath === link.to
-                  ? 'text-[#264653] bg-[#264653]/6 font-medium'
-                  : 'text-[#374151] hover:text-[#264653] hover:bg-[#F3F4F6]',
+                  ? 'text-[#8a9c4a] font-medium'
+                  : 'text-white/45 hover:text-white/80',
               )}
+              style={currentPath === link.to ? { background: 'rgba(96,108,56,0.08)' } : {}}
             >
               {link.label}
             </Link>
@@ -122,22 +125,30 @@ export function AuthNav() {
     return () => { document.body.style.overflow = '' }
   }, [mobileNavOpen])
 
+  const isDemoMode = localStorage.getItem('ml_demo_mode') === 'true'
+
   return (
     <>
       <header
         className={cn(
           'fixed top-0 left-0 right-0 z-50 transition-all duration-300 pt-safe',
-          scrolled ? 'bg-white/95 backdrop-blur-md shadow-[0_1px_16px_rgba(0,0,0,0.08)]' : 'bg-white border-b border-[#E5E7EB]',
         )}
+        style={{
+          background: scrolled ? 'rgba(8,12,20,0.96)' : '#0D1420',
+          borderBottom: '1px solid rgba(96,108,56,0.12)',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          boxShadow: scrolled ? '0 1px 24px rgba(0,0,0,0.4)' : 'none',
+        }}
       >
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <Link to="/dashboard" className="flex items-center gap-2 shrink-0">
-              <div className="w-8 h-8 rounded-[8px] bg-[#264653] flex items-center justify-center">
-                <span className="text-white font-bold text-sm">ML</span>
+            <Link to="/dashboard" className="flex items-center gap-2.5 shrink-0">
+              <div className="w-8 h-8 rounded-[8px] flex items-center justify-center font-black text-sm text-white"
+                style={{ background: 'linear-gradient(135deg, #264653, #606C38)', border: '1px solid rgba(96,108,56,0.4)' }}>
+                ML
               </div>
-              <span className="font-bold text-[#1D3557] text-lg tracking-tight hidden sm:block">MotionLab</span>
+              <span className="font-bold text-white text-lg tracking-tight hidden sm:block">MotionLab</span>
             </Link>
 
             {/* Desktop nav sections — 1400px+ */}
@@ -147,31 +158,44 @@ export function AuthNav() {
               <NavSection label="Connect" icon={<Users size={14} />} links={CONNECT_LINKS} currentPath={location.pathname} />
             </nav>
 
-            {/* Right: notifications + account */}
+            {/* Right: demo badge + notifications + account */}
             <div className="flex items-center gap-2">
+              {isDemoMode && (
+                <span className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full font-mono text-[9px] uppercase tracking-wider"
+                  style={{ background: 'rgba(96,108,56,0.1)', border: '1px solid rgba(96,108,56,0.2)', color: '#8a9c4a' }}>
+                  Demo
+                </span>
+              )}
+
               {/* Notification bell */}
-              <button className="relative w-10 h-10 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[8px] text-[#6B7280] hover:bg-[#F3F4F6] hover:text-[#264653] transition-colors">
-                <Bell size={20} />
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-[#606C38]" aria-label="Unread notifications" />
+              <button className="relative w-10 h-10 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-[8px] text-white/30 hover:text-white/60 transition-colors"
+                style={{ background: 'transparent' }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(96,108,56,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+              >
+                <Bell size={18} />
+                <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-[#606C38]" aria-label="Unread notifications" />
               </button>
 
               {/* Account dropdown */}
               <div ref={accountRef} className="relative">
                 <button
                   onClick={() => setAccountOpen(v => !v)}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-[8px] hover:bg-[#F3F4F6] transition-colors min-h-[44px]"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-[8px] transition-colors min-h-[44px]"
+                  style={{ background: accountOpen ? 'rgba(96,108,56,0.08)' : 'transparent' }}
                   aria-label="Account menu"
                   aria-expanded={accountOpen}
                 >
                   <Avatar src={avatarUrl} name={profile?.name ?? user?.email} size="sm" />
-                  <ChevronDown size={14} className={cn('text-[#6B7280] transition-transform duration-200 hidden sm:block', accountOpen && 'rotate-180')} />
+                  <ChevronDown size={14} className={cn('text-white/30 transition-transform duration-200 hidden sm:block', accountOpen && 'rotate-180')} />
                 </button>
 
                 {accountOpen && (
-                  <div className="absolute top-full right-0 mt-1.5 w-56 bg-white rounded-[10px] border border-[#E5E7EB] shadow-[0_8px_32px_rgba(0,0,0,0.12)] py-1.5 z-50">
-                    <div className="px-4 py-3 border-b border-[#E5E7EB]">
-                      <p className="text-sm font-medium text-[#1F2937] truncate">{profile?.name ?? 'User'}</p>
-                      <p className="text-xs text-[#6B7280] truncate">{user?.email}</p>
+                  <div className="absolute top-full right-0 mt-1.5 w-56 rounded-[10px] py-1.5 z-50"
+                    style={{ background: '#0D1420', border: '1px solid rgba(96,108,56,0.18)', boxShadow: '0 16px 48px rgba(0,0,0,0.5)' }}>
+                    <div className="px-4 py-3" style={{ borderBottom: '1px solid rgba(96,108,56,0.1)' }}>
+                      <p className="text-sm font-medium text-white/85 truncate">{profile?.name ?? 'Demo Athlete'}</p>
+                      <p className="text-xs text-white/30 truncate">{user?.email}</p>
                     </div>
                     <div className="py-1">
                       {[
@@ -183,18 +207,22 @@ export function AuthNav() {
                         <Link
                           key={item.to}
                           to={item.to}
-                          className="flex items-center px-4 py-2.5 text-sm text-[#374151] hover:text-[#264653] hover:bg-[#F3F4F6] transition-colors min-h-[44px]"
+                          className="flex items-center px-4 py-2.5 text-sm text-white/45 hover:text-white/80 transition-colors min-h-[44px]"
+                          style={location.pathname === item.to ? { color: '#8a9c4a', background: 'rgba(96,108,56,0.06)' } : {}}
                         >
                           {item.label}
                         </Link>
                       ))}
                     </div>
-                    <div className="border-t border-[#E5E7EB] pt-1">
+                    <div className="pt-1" style={{ borderTop: '1px solid rgba(96,108,56,0.1)' }}>
                       <button
                         onClick={signOut}
-                        className="w-full flex items-center px-4 py-2.5 text-sm text-[#6D071A] hover:bg-[#6D071A]/6 transition-colors min-h-[44px]"
+                        className="w-full flex items-center px-4 py-2.5 text-sm transition-colors min-h-[44px]"
+                        style={{ color: 'rgba(248,113,113,0.6)' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                       >
-                        Sign out
+                        {isDemoMode ? 'Exit Demo' : 'Sign out'}
                       </button>
                     </div>
                   </div>
@@ -203,7 +231,7 @@ export function AuthNav() {
 
               {/* Hamburger — below 1400px */}
               <button
-                className="min-[1400px]:hidden flex items-center justify-center w-10 h-10 min-h-[44px] min-w-[44px] rounded-[8px] text-[#374151] hover:bg-[#F3F4F6] transition-colors"
+                className="min-[1400px]:hidden flex items-center justify-center w-10 h-10 min-h-[44px] min-w-[44px] rounded-[8px] text-white/40 hover:text-white/70 transition-colors"
                 onClick={mobileNavOpen ? closeMobileNav : openMobileNav}
                 aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
                 aria-expanded={mobileNavOpen}
@@ -218,19 +246,20 @@ export function AuthNav() {
       {/* Mobile drawer */}
       <div className={cn('fixed inset-0 z-40 min-[1400px]:hidden transition-all duration-300', mobileNavOpen ? 'visible' : 'invisible')}>
         <div
-          className={cn('absolute inset-0 bg-black/40 transition-opacity duration-300', mobileNavOpen ? 'opacity-100' : 'opacity-0')}
+          className={cn('absolute inset-0 bg-black/60 transition-opacity duration-300', mobileNavOpen ? 'opacity-100' : 'opacity-0')}
           onClick={closeMobileNav}
         />
         <div
           className={cn(
-            'absolute top-0 right-0 bottom-0 w-[min(320px,85vw)] bg-white shadow-2xl transition-transform duration-300 flex flex-col overflow-y-auto',
+            'absolute top-0 right-0 bottom-0 w-[min(320px,85vw)] shadow-2xl transition-transform duration-300 flex flex-col overflow-y-auto',
             'pt-safe pb-safe',
             mobileNavOpen ? 'translate-x-0' : 'translate-x-full',
           )}
+          style={{ background: '#0D1420', borderLeft: '1px solid rgba(96,108,56,0.15)' }}
         >
-          <div className="flex items-center justify-between px-6 h-16 border-b border-[#E5E7EB] shrink-0">
-            <span className="font-bold text-[#1D3557]">Menu</span>
-            <button onClick={closeMobileNav} className="w-9 h-9 flex items-center justify-center rounded-[6px] text-[#6B7280] hover:bg-[#F3F4F6]" aria-label="Close">
+          <div className="flex items-center justify-between px-6 h-16 shrink-0" style={{ borderBottom: '1px solid rgba(96,108,56,0.1)' }}>
+            <span className="font-bold text-white/70 text-sm">Menu</span>
+            <button onClick={closeMobileNav} className="w-9 h-9 flex items-center justify-center rounded-[6px] text-white/30 hover:text-white/60" aria-label="Close">
               <X size={20} />
             </button>
           </div>
@@ -241,8 +270,8 @@ export function AuthNav() {
               { section: 'Learn', links: LEARN_LINKS },
               { section: 'Connect', links: CONNECT_LINKS },
             ].map(({ section, links }) => (
-              <div key={section} className="mb-4">
-                <p className="text-xs font-semibold text-[#9CA3AF] uppercase tracking-widest px-4 mb-1">{section}</p>
+              <div key={section} className="mb-5">
+                <p className="font-mono text-[9px] text-white/20 uppercase tracking-widest px-4 mb-2">{section}</p>
                 <div className="flex flex-col gap-0.5">
                   {links.map(link => (
                     <Link
@@ -251,9 +280,10 @@ export function AuthNav() {
                       className={cn(
                         'flex items-center px-4 py-3 rounded-[8px] text-sm font-medium min-h-[44px] transition-colors',
                         location.pathname === link.to
-                          ? 'text-[#264653] bg-[#264653]/8'
-                          : 'text-[#374151] hover:text-[#264653] hover:bg-[#F3F4F6]',
+                          ? 'text-[#8a9c4a]'
+                          : 'text-white/40 hover:text-white/70',
                       )}
+                      style={location.pathname === link.to ? { background: 'rgba(96,108,56,0.08)' } : {}}
                     >
                       {link.label}
                     </Link>
@@ -263,19 +293,20 @@ export function AuthNav() {
             ))}
           </div>
 
-          <div className="px-6 py-4 border-t border-[#E5E7EB] shrink-0">
+          <div className="px-6 py-4 shrink-0" style={{ borderTop: '1px solid rgba(96,108,56,0.1)' }}>
             <div className="flex items-center gap-3 mb-4">
               <Avatar src={avatarUrl} name={profile?.name ?? user?.email} size="md" />
               <div className="min-w-0">
-                <p className="text-sm font-medium text-[#1F2937] truncate">{profile?.name ?? 'User'}</p>
-                <p className="text-xs text-[#6B7280] truncate">{user?.email}</p>
+                <p className="text-sm font-medium text-white/75 truncate">{profile?.name ?? 'Demo Athlete'}</p>
+                <p className="text-xs text-white/25 truncate">{user?.email}</p>
               </div>
             </div>
             <button
               onClick={signOut}
-              className="w-full text-sm text-[#6D071A] font-medium py-2.5 min-h-[44px] hover:bg-[#6D071A]/6 rounded-[8px] transition-colors"
+              className="w-full text-sm font-medium py-2.5 min-h-[44px] rounded-[8px] transition-colors"
+              style={{ color: 'rgba(248,113,113,0.6)' }}
             >
-              Sign out
+              {isDemoMode ? 'Exit Demo' : 'Sign out'}
             </button>
           </div>
         </div>
