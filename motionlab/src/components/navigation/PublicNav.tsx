@@ -8,6 +8,8 @@ const NAV_LINKS = [
   { label: 'Sports', to: '/sports' },
   { label: 'Experts', to: '/experts' },
   { label: 'Resources', to: '/resources' },
+  { label: 'Tracker', to: '/dashboard' },
+  { label: 'Body Lab', to: '/body-lab' },
   { label: 'Gym Finder', to: '/gyms' },
   { label: 'About', to: '/about' },
   { label: 'Contact', to: '/contact' },

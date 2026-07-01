@@ -6,18 +6,15 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useUI } from '@/contexts/UIContext'
 import { cn } from '@/lib/utils'
 
-const TRAIN_LINKS = [
-  { label: 'Dashboard', to: '/dashboard' },
-  { label: 'Workout', to: '/workout' },
-  { label: 'Nutrition', to: '/nutrition' },
-  { label: 'Progress', to: '/progress' },
-  { label: 'Body Lab', to: '/anatomy' },
-]
+// Train collapses to a single top-level link into the Tracker umbrella;
+// the section sub-nav now lives in the in-page tab strip (TrackerLayout).
+const TRACKER_PATHS = ['/dashboard', '/workout', '/nutrition', '/progress']
 
 const LEARN_LINKS = [
   { label: 'Sports Library', to: '/sports' },
   { label: 'Learning Paths', to: '/learn' },
   { label: 'Movement Science', to: '/movement-science' },
+  { label: 'Body Lab', to: '/body-lab' },
   { label: 'Injury Prevention', to: '/injury-prevention' },
   { label: 'Recovery', to: '/recovery' },
 ]
@@ -153,7 +150,19 @@ export function AuthNav() {
 
             {/* Desktop nav sections — 1400px+ */}
             <nav className="hidden min-[1400px]:flex items-center gap-1">
-              <NavSection label="Train" icon={<Dumbbell size={14} />} links={TRAIN_LINKS} currentPath={location.pathname} />
+              <Link
+                to="/dashboard"
+                className={cn(
+                  'flex items-center gap-1.5 px-3 py-2 rounded-[8px] text-sm font-medium transition-colors min-h-[44px]',
+                  TRACKER_PATHS.some(p => location.pathname.startsWith(p))
+                    ? 'text-[#8a9c4a]'
+                    : 'text-white/45 hover:text-white/80',
+                )}
+                style={TRACKER_PATHS.some(p => location.pathname.startsWith(p)) ? { background: 'rgba(96,108,56,0.1)' } : {}}
+              >
+                <Dumbbell size={14} />
+                Train
+              </Link>
               <NavSection label="Learn" icon={<BookOpen size={14} />} links={LEARN_LINKS} currentPath={location.pathname} />
               <NavSection label="Connect" icon={<Users size={14} />} links={CONNECT_LINKS} currentPath={location.pathname} />
             </nav>
@@ -265,8 +274,23 @@ export function AuthNav() {
           </div>
 
           <div className="flex-1 px-4 py-4 overflow-y-auto">
+            {/* Train — single link into the Tracker umbrella */}
+            <div className="mb-5">
+              <Link
+                to="/dashboard"
+                className={cn(
+                  'flex items-center gap-2 px-4 py-3 rounded-[8px] text-sm font-medium min-h-[44px] transition-colors',
+                  TRACKER_PATHS.some(p => location.pathname.startsWith(p))
+                    ? 'text-[#8a9c4a]'
+                    : 'text-white/40 hover:text-white/70',
+                )}
+                style={TRACKER_PATHS.some(p => location.pathname.startsWith(p)) ? { background: 'rgba(96,108,56,0.08)' } : {}}
+              >
+                <Dumbbell size={15} />
+                Train
+              </Link>
+            </div>
             {[
-              { section: 'Train', links: TRAIN_LINKS },
               { section: 'Learn', links: LEARN_LINKS },
               { section: 'Connect', links: CONNECT_LINKS },
             ].map(({ section, links }) => (

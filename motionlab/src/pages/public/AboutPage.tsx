@@ -53,7 +53,7 @@ export default function AboutPage() {
             <PillTag className="mb-8">Where It Started</PillTag>
             <div className="space-y-6 text-white/60 text-base sm:text-lg leading-relaxed">
               <p>
-                We both reached the same realisation from different directions. Aditya through a scapular injury that sent him to a sports physiotherapist — and the revelation that the warmup protocols, biomechanics, and movement science he was taught should have been part of his training from day one, not discovered after an injury. Akshay through years of serious basketball, followed by a return to the gym and a frustration at how generic every fitness app felt — none of them understood he was an athlete, not just someone trying to lose weight.
+                We both reached the same realisation from different directions. Aditya through a scapular injury that sent him to a sports physiotherapist — and the revelation that the warmup protocols, biomechanics, and movement science he was taught should have been part of his training from day one, not discovered after an injury. Akshay through recurring heel injuries from years of competitive basketball, and the frustration of never finding workout advice or nutrition guidance that actually accounted for his injury history or his preferences — every fitness app treated him like a generic user, not an athlete recovering and training with real constraints. That frustration pushed him to study the body's anatomy as a whole, so he could actually understand the space instead of just following generic advice.
               </p>
               <p>
                 The existing landscape is fragmented. YouTube gives you technique videos but no structure and no injury context. Fitness apps track your workouts but don't teach you why the exercises exist. Sports physios provide expert guidance at a cost that most recreational athletes simply can't sustain. And no platform connects what you learn about your body to how you actually train day to day.
@@ -143,13 +143,13 @@ export default function AboutPage() {
 
               <div className="space-y-3 text-white/55 text-sm leading-relaxed">
                 <p>
-                  I played basketball at national level. At that stage, you have coaches, conditioning specialists, and a training structure that actually accounts for the sport you play. You don't realise how much of that structure disappears when your competitive career ends.
+                  I've always picked up sports fast. I competed in table tennis and basketball, did well at both, but never had a dedicated strength coach or conditioning program built around either. When I started training seriously in the gym, nobody handed me a structure. I had to figure out programming, progressive overload, and recovery through pure trial and error, reading whatever I could find, testing things on myself and seeing what actually worked.
                 </p>
                 <p>
-                  When I transitioned to training at the gym regularly, every fitness app I tried felt the same: generic, unintelligent, treating me like someone trying to lose 5kg before a wedding. None of them understood that I was an athlete, that I had a sport schedule to train around, that I needed progressive overload and deload logic.
+                  Every fitness app I tried along the way felt like it was solving a different problem. Generic templates, no sense of who I actually was as an athlete, no understanding that I had a sport schedule to train around, or that my body already knew how to move and just needed the right training logic layered on top.
                 </p>
                 <p>
-                  So I built KavaFit — AI-powered workout planning, live session tracking, PR detection, nutrition logging, and a contextual AI coach that actually knows your history. When Aditya and I talked, we realised immediately that our products needed each other. MotionLab is what happens when you combine both properly.
+                  So I built KavaFit. AI-powered workout planning, live session tracking, PR detection, nutrition logging, and a contextual AI coach that actually knows your training history. When Aditya and I talked, we realized immediately that our products needed each other. MotionLab is what happens when you combine both properly.
                 </p>
               </div>
 
