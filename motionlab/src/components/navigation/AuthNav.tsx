@@ -8,13 +8,12 @@ import { cn } from '@/lib/utils'
 
 // Train collapses to a single top-level link into the Tracker umbrella;
 // the section sub-nav now lives in the in-page tab strip (TrackerLayout).
-const TRACKER_PATHS = ['/dashboard', '/workout', '/nutrition', '/progress']
+const TRACKER_PATHS = ['/dashboard', '/workout', '/nutrition', '/progress', '/anatomy']
 
 const LEARN_LINKS = [
   { label: 'Sports Library', to: '/sports' },
   { label: 'Learning Paths', to: '/learn' },
   { label: 'Movement Science', to: '/movement-science' },
-  { label: 'Body Lab', to: '/body-lab' },
   { label: 'Injury Prevention', to: '/injury-prevention' },
   { label: 'Recovery', to: '/recovery' },
 ]

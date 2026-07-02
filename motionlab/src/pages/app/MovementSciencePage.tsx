@@ -91,7 +91,7 @@ export default function MovementSciencePage() {
       {/* Body Lab link-out — the full interactive anatomy tool lives on its own page */}
       <section className="py-12 lg:py-16" style={{ background: '#0D1420' }}>
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to="/body-lab" className="block group">
+          <Link to="/anatomy" className="block group">
             <FuturisticCard className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-1.5">

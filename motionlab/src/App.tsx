@@ -15,7 +15,6 @@ const SportDetailPage = lazy(() => import('@/pages/public/SportDetailPage'))
 const ExpertsPage = lazy(() => import('@/pages/public/ExpertsPage'))
 const ResourcesPage = lazy(() => import('@/pages/public/ResourcesPage'))
 const GymFinderPage = lazy(() => import('@/pages/public/GymFinderPage'))
-const BodyLabPage = lazy(() => import('@/pages/public/BodyLabPage'))
 const ContactPage = lazy(() => import('@/pages/public/ContactPage'))
 const AuthPage = lazy(() => import('@/pages/auth/AuthPage'))
 const OnboardingPage = lazy(() => import('@/pages/onboarding/OnboardingPage'))
@@ -23,6 +22,7 @@ const DashboardPage = lazy(() => import('@/pages/app/DashboardPage'))
 const WorkoutPage = lazy(() => import('@/pages/app/WorkoutPage'))
 const NutritionPage = lazy(() => import('@/pages/app/NutritionPage'))
 const ProgressPage = lazy(() => import('@/pages/app/ProgressPage'))
+const BodyLabPage = lazy(() => import('@/pages/app/BodyLabPage'))
 const LearningPathsPage = lazy(() => import('@/pages/app/LearningPathsPage'))
 const MovementSciencePage = lazy(() => import('@/pages/app/MovementSciencePage'))
 const InjuryPreventionPage = lazy(() => import('@/pages/app/InjuryPreventionPage'))
@@ -54,17 +54,7 @@ export default function App() {
                 <Route path="/experts" element={<ExpertsPage />} />
                 <Route path="/resources" element={<ResourcesPage />} />
                 <Route path="/gyms" element={<GymFinderPage />} />
-                <Route path="/body-lab" element={<BodyLabPage />} />
                 <Route path="/contact" element={<ContactPage />} />
-
-                {/* Tracker umbrella — kept under the public top nav, with its
-                    own Train/Connect secondary nav (TrackerLayout) */}
-                <Route element={<TrackerLayout />}>
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  <Route path="/workout" element={<WorkoutPage />} />
-                  <Route path="/nutrition" element={<NutritionPage />} />
-                  <Route path="/progress" element={<ProgressPage />} />
-                </Route>
               </Route>
 
               {/* Auth */}
@@ -76,6 +66,16 @@ export default function App() {
 
               {/* Protected app */}
               <Route element={<AppLayout />}>
+                {/* Train — Tracker umbrella + Body Lab share the in-page
+                    sub-nav strip (TrackerLayout) */}
+                <Route element={<TrackerLayout />}>
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  <Route path="/workout" element={<WorkoutPage />} />
+                  <Route path="/nutrition" element={<NutritionPage />} />
+                  <Route path="/progress" element={<ProgressPage />} />
+                  <Route path="/anatomy" element={<BodyLabPage />} />
+                </Route>
+
                 <Route path="/learn" element={<LearningPathsPage />} />
                 <Route path="/movement-science" element={<MovementSciencePage />} />
                 <Route path="/injury-prevention" element={<InjuryPreventionPage />} />
