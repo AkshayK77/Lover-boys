@@ -3,7 +3,6 @@
 -- PRD §8.1, §8.5
 -- =====================================================
 
-create extension if not exists "uuid-ossp";
 create extension if not exists "pg_trgm";
 
 -- -------------------------------------------------------
@@ -22,7 +21,7 @@ $$;
 -- role: admin | expert | user
 -- -------------------------------------------------------
 create table public.user_roles (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   role        text not null check (role in ('admin', 'expert', 'user')),
   granted_at  timestamptz not null default now(),
@@ -125,7 +124,7 @@ create trigger on_auth_user_created
 -- notifications  (PRD §8.5)
 -- -------------------------------------------------------
 create table public.notifications (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   type        text not null,
   title       text not null,
@@ -148,7 +147,7 @@ create index notifications_user_unread_idx on public.notifications (user_id, rea
 -- content_type: lesson | article | plan
 -- -------------------------------------------------------
 create table public.bookmarks (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   content_type  text not null check (content_type in ('lesson', 'article', 'plan')),
   content_id    uuid not null,
@@ -169,7 +168,7 @@ create index bookmarks_user_idx on public.bookmarks (user_id, created_at desc);
 -- weekly sport schedule — drives the warmup reminder flow
 -- -------------------------------------------------------
 create table public.sport_schedules (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   sport       text not null,
   day_of_week int not null check (day_of_week between 0 and 6),  -- 0=Sun, 6=Sat

@@ -9,7 +9,7 @@
 -- PRD §5.6: daily macro tracking — calories, protein, carbs, fat vs user targets
 -- -------------------------------------------------------
 create table public.meal_history (
-  id                  uuid primary key default uuid_generate_v4(),
+  id                  uuid primary key default gen_random_uuid(),
   user_id             uuid not null references auth.users(id) on delete cascade,
   food_name           text not null,
   meal_type           text check (meal_type in ('breakfast', 'lunch', 'dinner', 'snack', 'pre_workout', 'post_workout')),
@@ -41,7 +41,7 @@ create index meal_history_user_date_idx on public.meal_history (user_id, logged_
 -- lives in supabase/seeds/indian_foods.sql
 -- -------------------------------------------------------
 create table public.indian_foods (
-  id                uuid primary key default uuid_generate_v4(),
+  id                uuid primary key default gen_random_uuid(),
   name              text not null,
   name_local        text,   -- regional name (e.g. Hindi, Tamil)
   category          text,   -- dal, rice, bread, vegetable, protein, snack, drink

@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "import:kavafit": "node --env-file=.env.local supabase/scripts/import-from-kavafit.mjs"
   },
   "dependencies": {
     "@sentry/react": "^10.62.0",
