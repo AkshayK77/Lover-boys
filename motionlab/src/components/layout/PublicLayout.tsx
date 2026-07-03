@@ -1,10 +1,14 @@
 import { Outlet } from 'react-router-dom'
 import { PublicNav } from '@/components/navigation/PublicNav'
+import { AuthNav } from '@/components/navigation/AuthNav'
+import { useAuth } from '@/contexts/AuthContext'
 
 export function PublicLayout() {
+  const { user } = useAuth()
+
   return (
     <div className="min-h-screen flex flex-col bg-[#FAFAFA]">
-      <PublicNav />
+      {user ? <AuthNav /> : <PublicNav />}
       <main className="flex-1">
         <Outlet />
       </main>

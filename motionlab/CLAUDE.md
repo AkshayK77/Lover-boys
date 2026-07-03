@@ -1,0 +1,1 @@
+Before any work, read `./docs/PRD.md` in full — it's the source of truth for scope, architecture, and decisions.

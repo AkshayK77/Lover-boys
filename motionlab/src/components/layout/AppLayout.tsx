@@ -24,7 +24,7 @@ export function AppLayout() {
   }
 
   if (!user) return <Navigate to="/auth" replace />
-  if (user && profile && !profile.onboarding_complete) return <Navigate to="/onboarding" replace />
+  if (profile && !profile.onboarding_complete) return <Navigate to="/onboarding" replace />
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#080C14' }}>

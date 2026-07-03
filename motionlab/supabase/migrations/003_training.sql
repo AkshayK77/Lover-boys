@@ -8,7 +8,7 @@
 -- ~400 pre-seeded via separate seed file
 -- -------------------------------------------------------
 create table public.exercises (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   name          text not null,
   slug          text not null unique,
   description   text,
@@ -42,7 +42,7 @@ create index exercises_name_search_idx on public.exercises using gin (name gin_t
 -- AI-generated or manual plans per user
 -- -------------------------------------------------------
 create table public.workout_plans (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   name          text not null,
   plan_type     text check (plan_type in ('ppl', 'ppl_upper_lower', 'full_body', 'bro_split', 'sport_supplementary', 'single_session')),
@@ -71,7 +71,7 @@ create index workout_plans_user_active_idx on public.workout_plans (user_id, act
 -- Day-level structure within a plan
 -- -------------------------------------------------------
 create table public.plan_days (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   plan_id     uuid not null references public.workout_plans(id) on delete cascade,
   day_number  int not null,    -- 1–7 within the week
   name        text,            -- e.g. "Push Day", "Leg Day"
@@ -97,7 +97,7 @@ create index plan_days_plan_idx on public.plan_days (plan_id, day_number);
 -- Completed workout sessions
 -- -------------------------------------------------------
 create table public.sessions (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   plan_id     uuid references public.workout_plans(id) on delete set null,
   plan_day_id uuid references public.plan_days(id) on delete set null,
@@ -125,7 +125,7 @@ create index sessions_user_sport_idx on public.sessions (user_id, sport);
 -- Individual sets: reps, weight, RPE, timestamp
 -- -------------------------------------------------------
 create table public.session_sets (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   session_id  uuid not null references public.sessions(id) on delete cascade,
   exercise_id uuid not null references public.exercises(id) on delete cascade,
   set_number  int not null,
@@ -156,7 +156,7 @@ create index session_sets_exercise_idx on public.session_sets (exercise_id);
 -- weight, body_fat_pct, chest, waist, hips, arms, thighs
 -- -------------------------------------------------------
 create table public.measurements (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   date          date not null default current_date,
   weight_kg     numeric(5,2),
@@ -186,7 +186,7 @@ create index measurements_user_date_idx on public.measurements (user_id, date de
 --         hamstrings, glutes, calves, abs, forearms
 -- -------------------------------------------------------
 create table public.muscle_volume_log (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   week_start    date not null,   -- Monday of the week
   muscle_group  text not null check (muscle_group in (
@@ -217,7 +217,7 @@ create index muscle_volume_log_user_week_idx on public.muscle_volume_log (user_i
 -- Private Supabase Storage bucket — signed URLs only
 -- -------------------------------------------------------
 create table public.progress_photos (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   storage_path  text not null,   -- path inside private bucket
   date          date not null default current_date,

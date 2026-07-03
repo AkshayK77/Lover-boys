@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { Link } from 'react-router-dom'
-import { Dumbbell, BookOpen, TrendingUp, Calendar, Zap, ArrowRight, Brain, Shield } from 'lucide-react'
-import { FuturisticCard, NodeLine, PillTag } from '@/components/ui/FuturisticElements'
+import { Dumbbell, BookOpen, TrendingUp, Calendar, Zap, ArrowRight, Brain } from 'lucide-react'
+import { NodeLine, PillTag } from '@/components/ui/FuturisticElements'
 import { cn } from '@/lib/utils'
 
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string; accent: string }) {
@@ -67,17 +67,6 @@ function MacroBar({ label, value, target, color }: { label: string; value: numbe
 export default function DashboardPage() {
   const { profile } = useAuth()
 
-  if (!profile) {
-    return (
-      <div className="flex flex-col gap-5">
-        <div className="h-9 w-64 rounded-[8px] animate-pulse" style={{ background: 'rgba(96,108,56,0.06)' }} />
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <div key={i} className="h-28 rounded-[12px] animate-pulse" style={{ background: 'rgba(96,108,56,0.04)', border: '1px solid rgba(96,108,56,0.08)' }} />)}
-        </div>
-      </div>
-    )
-  }
-
   const greeting = () => {
     const h = new Date().getHours()
     if (h < 12) return 'Good morning'
@@ -85,9 +74,10 @@ export default function DashboardPage() {
     return 'Good evening'
   }
 
-  const firstName = profile.name?.split(' ')[0] ?? 'Athlete'
-  const calorieTarget = profile.calorie_target ?? 2000
-  const proteinTarget = profile.protein_target ?? 120
+  // Fallbacks let the dashboard render for logged-out preview visitors too.
+  const firstName = profile?.name?.split(' ')[0] ?? 'Athlete'
+  const calorieTarget = profile?.calorie_target ?? 2000
+  const proteinTarget = profile?.protein_target ?? 120
 
   return (
     <div className="flex flex-col gap-5">
@@ -199,35 +189,6 @@ export default function DashboardPage() {
           />
         </DashCard>
 
-        {/* Quick links to Phase 2 pages */}
-        <div className="lg:col-span-3">
-          <div className="rounded-[12px] p-5" style={{ background: '#0D1420', border: '1px solid rgba(96,108,56,0.1)' }}>
-            <p className="font-mono text-[9px] text-white/20 uppercase tracking-widest mb-4">Available now</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {[
-                { icon: <BookOpen size={16} />, label: 'Learning Paths', sub: 'TT + Football', to: '/learn' },
-                { icon: <Brain size={16} />, label: 'Movement Science', sub: 'Anatomy + biomechanics', to: '/movement-science' },
-                { icon: <Shield size={16} />, label: 'Injury Prevention', sub: 'Warmup protocols', to: '/injury-prevention' },
-                { icon: <Dumbbell size={16} />, label: 'Sports Library', sub: '5 pillars per sport', to: '/sports' },
-              ].map(item => (
-                <Link key={item.to} to={item.to}
-                  className="flex items-start gap-3 p-3.5 rounded-[10px] group transition-colors"
-                  style={{ border: '1px solid rgba(96,108,56,0.08)' }}
-                  onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(96,108,56,0.25)')}
-                  onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(96,108,56,0.08)')}>
-                  <div className="w-8 h-8 rounded-[6px] flex items-center justify-center shrink-0 text-[#8a9c4a]/60 group-hover:text-[#8a9c4a] transition-colors"
-                    style={{ background: 'rgba(96,108,56,0.06)' }}>
-                    {item.icon}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-white/65 text-xs font-semibold group-hover:text-white/85 transition-colors truncate">{item.label}</p>
-                    <p className="text-white/20 text-[10px] truncate mt-0.5">{item.sub}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

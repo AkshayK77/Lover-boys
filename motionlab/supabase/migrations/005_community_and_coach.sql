@@ -10,7 +10,7 @@
 -- upvotes / downvotes as separate counts (PRD §5.9)
 -- -------------------------------------------------------
 create table public.discussions (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   sport_tag     text not null,   -- required: one of the sport slugs
   flair         text check (flair in ('technique', 'injury_question', 'progress', 'recovery', 'general', 'ask_an_expert')),
@@ -60,7 +60,7 @@ create index discussions_flair_idx on public.discussions (flair);
 -- Nested one level via parent_comment_id
 -- -------------------------------------------------------
 create table public.comments (
-  id                uuid primary key default uuid_generate_v4(),
+  id                uuid primary key default gen_random_uuid(),
   discussion_id     uuid not null references public.discussions(id) on delete cascade,
   parent_comment_id uuid references public.comments(id) on delete cascade,
   user_id           uuid not null references auth.users(id) on delete cascade,
@@ -100,7 +100,7 @@ create index comments_parent_idx on public.comments (parent_comment_id);
 -- vote_type: up | down — one vote per user per post, toggleable
 -- -------------------------------------------------------
 create table public.post_votes (
-  id            uuid primary key default uuid_generate_v4(),
+  id            uuid primary key default gen_random_uuid(),
   user_id       uuid not null references auth.users(id) on delete cascade,
   discussion_id uuid not null references public.discussions(id) on delete cascade,
   vote_type     text not null check (vote_type in ('up', 'down')),
@@ -156,7 +156,7 @@ create index post_votes_discussion_idx on public.post_votes (discussion_id);
 -- comment_votes  (PRD §8.4)
 -- -------------------------------------------------------
 create table public.comment_votes (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   comment_id  uuid not null references public.comments(id) on delete cascade,
   vote_type   text not null check (vote_type in ('up', 'down')),
@@ -212,7 +212,7 @@ create index comment_votes_comment_idx on public.comment_votes (comment_id);
 -- AI coach sessions — inherits KavaFit Groq architecture
 -- -------------------------------------------------------
 create table public.coach_conversations (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   user_id     uuid not null references auth.users(id) on delete cascade,
   title       text,
   created_at  timestamptz not null default now(),
@@ -237,7 +237,7 @@ create index coach_conversations_user_idx on public.coach_conversations (user_id
 -- mode values from PRD §5.10 AI Modes table
 -- -------------------------------------------------------
 create table public.coach_messages (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   conversation_id uuid not null references public.coach_conversations(id) on delete cascade,
   role            text not null check (role in ('user', 'assistant')),
   content         text not null,

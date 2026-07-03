@@ -8,7 +8,7 @@
 -- Seeded with 8 sports per PRD §5.7
 -- -------------------------------------------------------
 create table public.sports (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   name        text not null,
   slug        text not null unique,
   description text,
@@ -42,7 +42,7 @@ insert into public.sports (slug, name, description, active, sort_order) values
 -- experts  (PRD §8.3)
 -- -------------------------------------------------------
 create table public.experts (
-  id              uuid primary key default uuid_generate_v4(),
+  id              uuid primary key default gen_random_uuid(),
   name            text not null,
   title           text,
   bio             text,
@@ -72,7 +72,7 @@ create policy "expert users can read own record"
 -- Each sport gets 3 paths: beginner, intermediate, advanced
 -- -------------------------------------------------------
 create table public.learning_paths (
-  id          uuid primary key default uuid_generate_v4(),
+  id          uuid primary key default gen_random_uuid(),
   sport_id    uuid not null references public.sports(id) on delete cascade,
   title       text not null,
   level       text not null check (level in ('beginner', 'intermediate', 'advanced')),
@@ -96,7 +96,7 @@ create index learning_paths_sport_idx on public.learning_paths (sport_id, level)
 -- Groupings within a path (4–8 modules per path)
 -- -------------------------------------------------------
 create table public.modules (
-  id                uuid primary key default uuid_generate_v4(),
+  id                uuid primary key default gen_random_uuid(),
   learning_path_id  uuid not null references public.learning_paths(id) on delete cascade,
   title             text not null,
   description       text,
@@ -121,7 +121,7 @@ create index modules_path_idx on public.modules (learning_path_id, sort_order);
 -- sport_tags + topic_tags enable AI RAG retrieval (PRD §7.3)
 -- -------------------------------------------------------
 create table public.lessons (
-  id                uuid primary key default uuid_generate_v4(),
+  id                uuid primary key default gen_random_uuid(),
   module_id         uuid not null references public.modules(id) on delete cascade,
   title             text not null,
   content_body      text,    -- markdown
@@ -161,7 +161,7 @@ create index lessons_topic_tags_idx on public.lessons using gin (topic_tags);
 -- Per-user lesson tracking — shown on Dashboard
 -- -------------------------------------------------------
 create table public.lesson_progress (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references auth.users(id) on delete cascade,
   lesson_id        uuid not null references public.lessons(id) on delete cascade,
   completed        boolean not null default false,
@@ -183,7 +183,7 @@ create index lesson_progress_user_idx on public.lesson_progress (user_id, comple
 -- Resource library — separate from lesson content
 -- -------------------------------------------------------
 create table public.articles (
-  id           uuid primary key default uuid_generate_v4(),
+  id           uuid primary key default gen_random_uuid(),
   title        text not null,
   body         text,    -- markdown
   author_id    uuid references public.experts(id) on delete set null,
@@ -216,7 +216,7 @@ create index articles_published_idx on public.articles (published_at desc);
 -- Earned when user completes a learning path
 -- -------------------------------------------------------
 create table public.certifications (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references auth.users(id) on delete cascade,
   learning_path_id uuid not null references public.learning_paths(id) on delete cascade,
   issued_at        timestamptz not null default now(),
@@ -241,7 +241,7 @@ create index certifications_user_idx on public.certifications (user_id, issued_a
 -- Badges and milestones
 -- -------------------------------------------------------
 create table public.achievements (
-  id               uuid primary key default uuid_generate_v4(),
+  id               uuid primary key default gen_random_uuid(),
   user_id          uuid not null references auth.users(id) on delete cascade,
   achievement_type text not null,
   earned_at        timestamptz not null default now(),

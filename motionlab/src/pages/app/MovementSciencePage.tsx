@@ -5,7 +5,6 @@
 
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { AnatomyDiagram } from '@/components/ui/AnatomyDiagram'
 import { NodeLine, PillTag, FuturisticCard, SectionHeader } from '@/components/ui/FuturisticElements'
 
 const SPORT_BIOMECHANICS = [
@@ -67,7 +66,6 @@ const BIOMECH_CONCEPTS = [
 export default function MovementSciencePage() {
   const [activeSport, setActiveSport] = useState(0)
   const [activeConcept, setActiveConcept] = useState<string | null>(null)
-  const [highlightedMuscle, setHighlightedMuscle] = useState<string | null>(null)
 
   const sport = SPORT_BIOMECHANICS[activeSport]
 
@@ -90,22 +88,25 @@ export default function MovementSciencePage() {
         </div>
       </section>
 
-      {/* Anatomy viewer */}
+      {/* Body Lab link-out — the full interactive anatomy tool lives on its own page */}
       <section className="py-12 lg:py-16" style={{ background: '#0D1420' }}>
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-xl font-bold text-white">Body Lab</h2>
-            <span className="font-mono text-[10px] text-white/25 uppercase tracking-wider">— Click any muscle group to inspect</span>
-          </div>
-          <p className="text-white/35 text-sm mb-8">
-            Explore all 11 muscle groups tracked in MotionLab's training system. Click a muscle to see function, injury risk, and key exercises.
-          </p>
-
-          <AnatomyDiagram
-            highlightedMuscle={highlightedMuscle}
-            onMuscleClick={id => setHighlightedMuscle(prev => prev === id ? null : id)}
-            className="max-w-4xl"
-          />
+          <Link to="/anatomy" className="block group">
+            <FuturisticCard className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+              <div className="flex-1">
+                <div className="flex items-center gap-3 mb-1.5">
+                  <h2 className="text-xl font-bold text-white">Explore the Body Lab</h2>
+                  <span className="font-mono text-[10px] text-[#8a9c4a] uppercase tracking-wider">Interactive tool</span>
+                </div>
+                <p className="text-white/40 text-sm leading-relaxed max-w-2xl">
+                  Inspect every muscle group on an interactive body map — function, injury risk, key exercises, and the exact macros and micronutrients each muscle needs to recover.
+                </p>
+              </div>
+              <span className="shrink-0 inline-flex items-center gap-2 text-sm font-semibold text-[#8a9c4a] group-hover:gap-3 transition-all">
+                Open Body Lab →
+              </span>
+            </FuturisticCard>
+          </Link>
         </div>
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 mt-12">
           <NodeLine />
@@ -127,7 +128,7 @@ export default function MovementSciencePage() {
             {SPORT_BIOMECHANICS.map((s, i) => (
               <button
                 key={s.slug}
-                onClick={() => { setActiveSport(i); setHighlightedMuscle(null) }}
+                onClick={() => setActiveSport(i)}
                 className={`flex items-center gap-2.5 px-5 py-2.5 rounded-full border text-sm font-medium transition-all ${
                   activeSport === i
                     ? 'text-white border-[#606C38]'
@@ -145,20 +146,13 @@ export default function MovementSciencePage() {
             <p className="font-mono text-[10px] text-[#8a9c4a] uppercase tracking-wider mb-2">Primary muscles loaded in {sport.sport}</p>
             <div className="flex flex-wrap gap-2">
               {sport.primaryMuscles.map(m => (
-                <button
+                <span
                   key={m}
-                  onClick={() => setHighlightedMuscle(prev => prev === m ? null : m)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border ${
-                    highlightedMuscle === m
-                      ? 'border-[#606C38]/60 text-[#8a9c4a]'
-                      : 'border-[#606C38]/15 text-white/40 hover:text-white/65'
-                  }`}
-                  style={highlightedMuscle === m ? { background: 'rgba(96,108,56,0.15)' } : {}}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider border border-[#606C38]/15 text-white/45"
                 >
                   {m}
-                </button>
+                </span>
               ))}
-              <span className="text-white/20 text-xs self-center ml-1">← click to highlight in the Body Lab above</span>
             </div>
           </div>
 
