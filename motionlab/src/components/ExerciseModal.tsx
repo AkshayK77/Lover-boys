@@ -1,13 +1,80 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { supabase } from '@/lib/supabase'
+import { callAI } from '@/lib/ai'
+import { resolveExerciseName } from '@/lib/exerciseAliases'
 
-// NOTE: In KavaFit this modal fetched step-by-step instructions via two Supabase
-// edge functions (rapidapi-proxy → ExerciseDB, with a Groq ai-proxy fallback).
-// MotionLab has no edge functions yet, so rather than ship a call that always
-// fails, we show a clear "coming with the AI Coach" state. Wire the real fetch
-// back in here once the ai-proxy edge function lands.
+// Loads step-by-step form instructions for an exercise. Primary source is the
+// exercises table (backfilled from the enriched free-exercise-db dataset, which
+// carries real instructions + a form thumbnail). If a row has no instructions we
+// fall back to generating five concise steps via the ai-proxy (Groq).
+
+interface ExerciseInfo {
+  steps: string[]
+  image: string | null
+}
+
+function parseSteps(instructions: string | null): string[] {
+  if (!instructions) return []
+  return instructions
+    .split('\n')
+    .map(l => l.replace(/^\s*\d+[.)]\s*/, '').trim())
+    .filter(Boolean)
+}
+
+async function lookupExercise(name: string): Promise<{ instructions: string | null; thumbnail_url: string | null } | null> {
+  const { data } = await supabase
+    .from('exercises')
+    .select('instructions, thumbnail_url')
+    .ilike('name', name)
+    .limit(1)
+    .maybeSingle()
+  return data ?? null
+}
+
+async function fetchInfo(exerciseName: string): Promise<ExerciseInfo> {
+  // Map the Body Lab's display name to its catalog name first, then strip any
+  // parenthetical before the fuzzy fallbacks.
+  const resolved = resolveExerciseName(exerciseName)
+  const clean = resolved.replace(/\s*\(.*?\)/g, '').trim()
+
+  let row = await lookupExercise(resolved).catch(() => null)
+  if (!row && clean !== resolved) row = await lookupExercise(clean).catch(() => null)
+  if (!row) {
+    const firstTwo = clean.split(' ').slice(0, 2).join(' ')
+    if (firstTwo !== clean) row = await lookupExercise(`${firstTwo}%`).catch(() => null)
+  }
+
+  const image = row?.thumbnail_url ?? null
+  const dbSteps = parseSteps(row?.instructions ?? null)
+  if (dbSteps.length) return { steps: dbSteps, image }
+
+  // Fallback: generate with Groq via ai-proxy
+  try {
+    const result = await callAI(
+      `Provide exactly 5 clear step-by-step instructions for performing the "${exerciseName}" exercise with proper form. Be concise — one sentence per step. Return JSON: { "steps": ["step 1", "step 2", "step 3", "step 4", "step 5"] }`,
+    )
+    const steps = Array.isArray(result?.steps) ? (result.steps as string[]) : []
+    return { steps, image }
+  } catch {
+    return { steps: [], image }
+  }
+}
+
 export default function ExerciseModal({ exerciseName, onClose }: { exerciseName: string; onClose: () => void }) {
   const isMobile = useIsMobile()
+  const [info, setInfo] = useState<ExerciseInfo>({ steps: [], image: null })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    let cancelled = false
+    setInfo({ steps: [], image: null })
+    setLoading(true)
+    fetchInfo(exerciseName)
+      .then(r => { if (!cancelled) { setInfo(r); setLoading(false) } })
+      .catch(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [exerciseName])
 
   const handleBackdrop = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) onClose()
@@ -32,15 +99,40 @@ export default function ExerciseModal({ exerciseName, onClose }: { exerciseName:
         </div>
 
         <div style={s.body}>
+          {info.image && (
+            <div style={s.imageRow}>
+              {[info.image, info.image.replace(/\/0\.(jpg|png|jpeg)$/i, '/1.$1')].map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`${exerciseName} — ${i === 0 ? 'start' : 'end'} position`}
+                  style={s.image}
+                  loading="lazy"
+                  onError={e => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                />
+              ))}
+            </div>
+          )}
+
           <p style={s.stepsLabel}>HOW TO PERFORM</p>
-          <div style={s.comingWrap}>
-            <div style={s.comingIcon}>◷</div>
-            <p style={s.comingTitle}>Step-by-step form guide coming soon</p>
-            <p style={s.comingText}>
-              Detailed, form-checked instructions for <strong style={{ color: 'var(--text)' }}>{exerciseName}</strong> arrive
-              with the MotionLab AI Coach — grounded in the movement science behind the lift.
-            </p>
-          </div>
+          {loading ? (
+            <div style={s.stepsLoading}>
+              {[95, 80, 92, 75, 88, 70].map((w, i) => (
+                <div key={i} style={{ ...s.stepSkeleton, width: `${w}%` }} />
+              ))}
+            </div>
+          ) : info.steps.length === 0 ? (
+            <p style={s.errorText}>Could not load instructions for this exercise.</p>
+          ) : (
+            <ol style={s.stepsList}>
+              {info.steps.map((step, i) => (
+                <li key={i} style={s.stepItem}>
+                  <span style={s.stepNum}>{i + 1}</span>
+                  <span style={s.stepText}>{step}</span>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       </div>
     </div>
@@ -56,8 +148,8 @@ const s: Record<string, React.CSSProperties> = {
     backdropFilter: 'blur(4px)',
   },
   modal: {
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
+    background: '#0D1420',
+    border: '1px solid rgba(96,108,56,0.2)',
     borderRadius: '14px',
     width: '100%', maxWidth: '520px', maxHeight: '85vh',
     overflow: 'hidden',
@@ -67,41 +159,62 @@ const s: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
     padding: '16px 20px',
-    borderBottom: '1px solid var(--border)',
+    borderBottom: '1px solid rgba(96,108,56,0.2)',
     flexShrink: 0,
   },
   title: {
-    fontFamily: 'var(--font-heading)',
+    fontFamily: "'Bebas Neue', system-ui, sans-serif",
     fontSize: '22px', letterSpacing: '0.03em', fontWeight: 700,
-    color: 'var(--text)', margin: 0,
+    color: '#f4f6ee', margin: 0,
   },
   closeBtn: {
     background: 'none', border: 'none', cursor: 'pointer',
-    color: 'var(--muted)', fontSize: '16px',
+    color: 'rgba(255,255,255,0.6)', fontSize: '16px',
     padding: '4px 8px', borderRadius: '6px',
   },
   body: {
     overflowY: 'auto', padding: '22px 24px',
   },
+  imageRow: {
+    display: 'flex', gap: '8px', marginBottom: '20px',
+  },
+  image: {
+    flex: 1, minWidth: 0, width: '50%', maxHeight: '150px', objectFit: 'contain',
+    borderRadius: '10px',
+    background: 'rgba(255,255,255,0.04)',
+    border: '1px solid rgba(96,108,56,0.2)',
+  },
   stepsLabel: {
     fontSize: '10px', fontWeight: '700', letterSpacing: '0.12em',
-    color: 'var(--accent)', margin: '0 0 18px',
+    color: '#8a9c4a', margin: '0 0 18px',
   },
-  comingWrap: {
-    display: 'flex', flexDirection: 'column', alignItems: 'center',
-    textAlign: 'center', gap: '12px', padding: '18px 8px 8px',
+  stepsList: {
+    listStyle: 'none', margin: 0, padding: 0,
+    display: 'flex', flexDirection: 'column', gap: '14px',
   },
-  comingIcon: {
-    width: '48px', height: '48px', borderRadius: '50%',
+  stepItem: {
+    display: 'flex', gap: '14px', alignItems: 'flex-start',
+  },
+  stepNum: {
+    flexShrink: 0,
+    width: '24px', height: '24px', borderRadius: '50%',
+    background: 'rgba(96,108,56,0.18)',
+    border: '1px solid rgba(96,108,56,0.4)',
+    color: '#a8b872',
+    fontSize: '11px', fontWeight: '700',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    background: 'var(--accent-dim)', border: '1px solid rgba(96,108,56,0.3)',
-    color: 'var(--accent)', fontSize: '22px',
   },
-  comingTitle: {
-    fontSize: '14px', fontWeight: '600', color: 'var(--text)', margin: 0,
+  stepText: {
+    fontSize: '13px', color: 'rgba(255,255,255,0.72)',
+    lineHeight: '1.7', paddingTop: '3px',
   },
-  comingText: {
-    fontSize: '13px', color: 'var(--muted)', lineHeight: '1.7', margin: 0,
-    maxWidth: '360px',
+  stepsLoading: {
+    display: 'flex', flexDirection: 'column', gap: '16px',
   },
+  stepSkeleton: {
+    height: '13px', borderRadius: '6px',
+    background: 'rgba(96,108,56,0.18)',
+    animation: 'pulse 1.4s ease-in-out infinite',
+  },
+  errorText: { fontSize: '13px', color: 'rgba(255,255,255,0.45)' },
 }

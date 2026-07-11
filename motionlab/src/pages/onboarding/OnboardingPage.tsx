@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/contexts/AuthContext'
 import { upsertProfile } from '@/lib/profiles'
+import { calcNutrition } from '@/lib/workoutPlan'
 import type { Profile } from '@/types'
 
 const TOTAL_STEPS = 6
@@ -142,7 +143,14 @@ export default function OnboardingPage() {
     if (!user) return
     setGenerating(true)
     try {
-      await upsertProfile(user.id, { ...data, onboarding_complete: true })
+      // Auto-fill blank macro targets via Mifflin-St Jeor (never overwrite
+      // a value the user typed).
+      const macroFill: Partial<Profile> = {}
+      const nut = calcNutrition({ ...data } as Profile)
+      if (!data.calorie_target && nut.calories) macroFill.calorie_target = nut.calories
+      if (!data.protein_target && nut.protein) macroFill.protein_target = nut.protein
+
+      await upsertProfile(user.id, { ...data, ...macroFill, onboarding_complete: true })
       await new Promise(r => setTimeout(r, 2000))
       localStorage.removeItem('ml_onboarding')
       await refreshProfile()
@@ -338,6 +346,52 @@ export default function OnboardingPage() {
                   )
                 })}
               </div>
+
+              {(data.sports ?? []).filter(s => s !== 'none').length > 0 && (
+                <div className="mt-6 flex flex-col gap-4">
+                  <p className="text-sm font-medium text-white/60">How often do you play each sport?</p>
+                  {(data.sports ?? []).filter(s => s !== 'none').map(slug => {
+                    const sport = SPORTS_OPTIONS.find(s => s.slug === slug)
+                    const freq = data.sport_frequency ?? {}
+                    return (
+                      <div key={slug}>
+                        <p className="text-xs text-white/40 mb-2">{sport?.emoji} {sport?.name}</p>
+                        <div className="flex flex-wrap gap-2">
+                          {[1, 2, 3, 4, 5].map(n => (
+                            <ToggleChip
+                              key={n}
+                              label={n === 5 ? '5+ / week' : `${n}x / week`}
+                              selected={freq[slug] === n}
+                              onClick={() => setField('sport_frequency', { ...freq, [slug]: n })}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <div className="mt-6">
+                <p className="text-sm font-medium text-white/60 mb-1">How active is your day-to-day lifestyle?</p>
+                <p className="text-xs text-white/25 mb-3">Outside of the gym and sport sessions above — helps the AI size your nutrition targets correctly.</p>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { val: 'sedentary', label: 'Sedentary', desc: 'Desk job, mostly sitting, little daily movement' },
+                    { val: 'lightly_active', label: 'Lightly active', desc: 'Some walking or light movement most days' },
+                    { val: 'moderately_active', label: 'Moderately active', desc: 'On your feet often, regular daily movement' },
+                    { val: 'very_active', label: 'Very active', desc: 'Physically demanding job or daily intense activity' },
+                  ].map(opt => (
+                    <SelectCard
+                      key={opt.val}
+                      label={opt.label}
+                      description={opt.desc}
+                      selected={data.activity_level === opt.val}
+                      onClick={() => setField('activity_level', opt.val as Profile['activity_level'])}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 
@@ -351,15 +405,16 @@ export default function OnboardingPage() {
                 <DarkInput
                   label="Daily calorie target (kcal)"
                   type="number"
-                  placeholder="2200"
-                  hint="Leave blank and the AI will calculate based on your goals"
+                  placeholder="Leave blank for AI to calculate"
+                  hint="Leave blank and the AI will calculate this from your goals, sports, sport frequency, and activity level"
                   value={data.calorie_target ?? ''}
                   onChange={e => setField('calorie_target', parseInt(e.target.value) || undefined as unknown as number)}
                 />
                 <DarkInput
                   label="Daily protein target (g)"
                   type="number"
-                  placeholder="150"
+                  placeholder="Leave blank for AI to calculate"
+                  hint="Leave blank and the AI will calculate this the same way"
                   value={data.protein_target ?? ''}
                   onChange={e => setField('protein_target', parseInt(e.target.value) || undefined as unknown as number)}
                 />
@@ -375,6 +430,17 @@ export default function OnboardingPage() {
                       />
                     ))}
                   </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-white/60 mb-2">Allergies or other dietary restrictions?</p>
+                  <textarea
+                    className="w-full rounded-[8px] px-3 py-2.5 text-sm text-white/80 placeholder-white/20 resize-none focus:outline-none min-h-[80px]"
+                    style={{ background: 'rgba(8,12,20,0.8)', border: '1px solid rgba(96,108,56,0.2)', colorScheme: 'dark' }}
+                    placeholder="e.g. Peanut allergy, lactose intolerant, no red meat..."
+                    value={data.dietary_notes ?? ''}
+                    onChange={e => setField('dietary_notes', e.target.value)}
+                  />
+                  <p className="text-xs text-white/25 mt-1.5">In addition to the preference above — filters food suggestions and recipes.</p>
                 </div>
               </div>
             </div>

@@ -1,0 +1,206 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+// Proxies LLM calls to Groq (llama-3.3-70b-versatile) so GROQ_API_KEY stays
+// server-side. Ported from KavaFit; CORS allow-list points at MotionLab origins.
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://localhost:4173',
+  'https://motionlab.vercel.app',
+]
+
+const RATE_LIMIT = 20
+const RATE_WINDOW_SECONDS = 60
+const MAX_MESSAGES = 50
+// Weekly-plan generation injects the full eligible exercise catalog (~20k chars
+// with the 873-exercise dataset), so this ceiling must clear that with headroom.
+const MAX_CONTENT_CHARS = 32000
+const MAX_SYSTEM_PROMPT_CHARS = 4000
+const VALID_ROLES = ['user', 'assistant', 'system']
+const VALID_MODES = ['flags', 'recipe', 'workout', 'grocery', 'warmup', 'sport_warmup', 'injury_check', 'learning_rec']
+const VALID_MODELS = ['llama-3.3-70b-versatile']
+
+serve(async (req) => {
+  const origin = req.headers.get('Origin')
+  const allowedOrigin = origin && ALLOWED_ORIGINS.includes(origin) ? origin : null
+
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': allowedOrigin ?? '',
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  }
+
+  if (req.method === 'OPTIONS') {
+    if (!allowedOrigin) return new Response('Forbidden', { status: 403 })
+    return new Response('ok', { headers: corsHeaders })
+  }
+
+  if (!allowedOrigin) {
+    return new Response(JSON.stringify({ error: 'Forbidden' }), {
+      headers: { 'Content-Type': 'application/json' },
+      status: 403,
+    })
+  }
+
+  try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Missing authorization header' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+
+    // Verify the caller has a valid Supabase session
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: authHeader } } },
+    )
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+
+    // Per-user rate limiting via service role client (bypasses RLS)
+    const adminClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+    )
+    const now = new Date()
+    const windowCutoff = new Date(now.getTime() - RATE_WINDOW_SECONDS * 1000)
+
+    const { data: rateRow } = await adminClient
+      .from('rate_limits')
+      .select('window_start, request_count')
+      .eq('user_id', user.id)
+      .single()
+
+    if (rateRow) {
+      const windowExpired = new Date(rateRow.window_start) < windowCutoff
+      if (windowExpired) {
+        await adminClient.from('rate_limits').upsert({
+          user_id: user.id,
+          window_start: now.toISOString(),
+          request_count: 1,
+        })
+      } else if (rateRow.request_count >= RATE_LIMIT) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please wait before sending another message.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      } else {
+        await adminClient
+          .from('rate_limits')
+          .update({ request_count: rateRow.request_count + 1 })
+          .eq('user_id', user.id)
+      }
+    } else {
+      await adminClient.from('rate_limits').insert({
+        user_id: user.id,
+        window_start: now.toISOString(),
+        request_count: 1,
+      })
+    }
+
+    // Parse and validate request body
+    const body = await req.json()
+    const { messages, model = 'llama-3.3-70b-versatile', temperature = 0.7, systemPrompt, mode } = body
+
+    if (!messages || !Array.isArray(messages)) {
+      return new Response(JSON.stringify({ error: 'messages array required' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      })
+    }
+
+    if (messages.length === 0 || messages.length > MAX_MESSAGES) {
+      return new Response(
+        JSON.stringify({ error: `messages must contain 1 to ${MAX_MESSAGES} items` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    for (const msg of messages) {
+      if (!VALID_ROLES.includes(msg.role)) {
+        return new Response(
+          JSON.stringify({ error: `Invalid role "${msg.role}". Must be one of: ${VALID_ROLES.join(', ')}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+      if (typeof msg.content !== 'string' || msg.content.length > MAX_CONTENT_CHARS) {
+        return new Response(
+          JSON.stringify({ error: `Message content must be a string of max ${MAX_CONTENT_CHARS} characters` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
+    if (systemPrompt !== undefined) {
+      if (typeof systemPrompt !== 'string' || systemPrompt.length > MAX_SYSTEM_PROMPT_CHARS) {
+        return new Response(
+          JSON.stringify({ error: `systemPrompt must be a string of max ${MAX_SYSTEM_PROMPT_CHARS} characters` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+        )
+      }
+    }
+
+    if (mode !== undefined && !VALID_MODES.includes(mode)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid mode. Must be one of: ${VALID_MODES.join(', ')}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    if (!VALID_MODELS.includes(model)) {
+      return new Response(
+        JSON.stringify({ error: `Invalid model. Must be one of: ${VALID_MODELS.join(', ')}` }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      )
+    }
+
+    const clampedTemperature = Math.min(2, Math.max(0, Number(temperature) || 0.7))
+
+    const groqKey = Deno.env.get('GROQ_API_KEY')
+    if (!groqKey) {
+      return new Response(JSON.stringify({ error: 'Groq API key not configured' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      })
+    }
+
+    const groqRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${groqKey}`,
+      },
+      body: JSON.stringify({ model, messages, temperature: clampedTemperature }),
+    })
+
+    if (!groqRes.ok) {
+      console.error('Groq API error:', groqRes.status, await groqRes.text())
+      return new Response(JSON.stringify({ error: 'Internal server error' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 502,
+      })
+    }
+
+    const groqData = await groqRes.json()
+    const content = groqData?.choices?.[0]?.message?.content ?? ''
+
+    return new Response(JSON.stringify({ content }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  } catch (err) {
+    console.error('ai-proxy error:', err)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: 500,
+    })
+  }
+})

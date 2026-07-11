@@ -13,12 +13,16 @@ const TRAIN_LINKS = [
   { to: '/nutrition', label: 'Nutrition' },
   { to: '/progress', label: 'Progress' },
   { to: '/anatomy', label: 'Body Lab' },
+  { to: '/exercises', label: 'Exercises' },
 ]
 
 export function TrackerLayout() {
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center gap-1.5">
+      <div
+        className="sticky top-16 z-30 flex flex-wrap items-center gap-1.5 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8 py-3"
+        style={{ background: '#080C14', borderBottom: '1px solid rgba(96,108,56,0.08)' }}
+      >
         {TRAIN_LINKS.map(link => (
           <NavLink
             key={link.to}

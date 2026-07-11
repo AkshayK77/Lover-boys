@@ -18,7 +18,9 @@ export interface Profile {
   dietary_preference: string | null
   sports: string[]
   sport_frequency: Record<string, number>
+  activity_level: 'sedentary' | 'lightly_active' | 'moderately_active' | 'very_active' | null
   learning_goals: string[]
+  dietary_notes: string | null
   onboarding_complete: boolean
   deload_suggested_at: string | null
   created_at: string

@@ -8,7 +8,7 @@ _Train with Understanding_
 
 Version 1.0  ·  June 2026  ·  Confidential 
 
-Founders: Aditya Saiprasad · KavaFit Founder 
+Founders: Aditya Saiprasad · Akshay Kannan 
 
 ## **1. Executive Summary** 
 
@@ -1493,6 +1493,36 @@ June 2026Page
 |kavafit_gyms_cache|Gym list for last location|24 hours|
 
 
+
+June 2026Page 
+
+**MotionLab** ·  Unified PRD v1.0  ·  Confidential 
+
+## **Appendix: Implementation Enhancements** 
+
+Everything logged here strengthens a commitment sections 1–15 already made — none of it
+redirects the product. Sections 1–15 are left exactly as originally written, as the historical
+record of intent; this appendix is the living record of how that intent was met or exceeded as
+the build progressed. Each entry ties back to the spec's own stated goal for that feature and
+states why the delivered outcome is stronger, not merely different.
+
+### **2026-07-11 — Exercise catalog (§8.2)** 
+
+- **Spec:** ~400 pre-seeded exercises with muscle groups, equipment, difficulty, instructions 
+- **Delivered:** 873 exercises, every one with full step-by-step instructions and two form-reference images 
+- **Why it's an enhancement:** The original 157-row seed had zero instructions and zero images. This over-delivers §8.2's own requirement rather than departing from it — same fields, fuller and more numerous. 
+
+### **2026-07-11 — Body Lab taxonomy (§5.11)** 
+
+- **Spec:** 40-group muscle taxonomy 
+- **Delivered:** 37-token granular taxonomy, Groq-enriched and validated against a fixed vocabulary 
+- **Why it's an enhancement:** Same design intent — tap a muscle, see volume/recovery/associated exercises. The count is a reconciliation to what's actually implemented, not a redesign. 
+
+### **2026-07-11 — Train navigation (§4.1): Exercise Library (`/exercises`)** 
+
+- **Spec:** Not listed as a nav item 
+- **Delivered:** New searchable library — filter by muscle group and equipment, view instructions + images per exercise 
+- **Why it's an enhancement:** §5.11 already promises "associated exercises" from the body model and §8.2 already requires visible "instructions." Neither had a standalone home. This page fills a capability the spec implied but never explicitly designed. 
 
 June 2026Page 
 

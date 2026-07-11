@@ -90,6 +90,7 @@ async function importExercises() {
       equipment,
       difficulty,
       category: 'strength', // KavaFit is exclusively a strength-training app
+      is_compound: row.is_compound ?? false,
       sports: [],
       video_url: null,
       thumbnail_url: null,
