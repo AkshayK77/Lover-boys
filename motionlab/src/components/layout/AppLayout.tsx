@@ -1,9 +1,14 @@
-import { Outlet, Navigate } from 'react-router-dom'
+import { Outlet, Navigate, useLocation } from 'react-router-dom'
+import { Brain } from 'lucide-react'
 import { AuthNav } from '@/components/navigation/AuthNav'
 import { useAuth } from '@/contexts/AuthContext'
+import { useUI } from '@/contexts/UIContext'
+import AIDrawer from '@/components/AIDrawer'
 
 export function AppLayout() {
   const { user, profile, loading } = useAuth()
+  const { drawerOpen, openDrawer, closeDrawer } = useUI()
+  const location = useLocation()
 
   if (loading) {
     return (
@@ -24,7 +29,7 @@ export function AppLayout() {
   }
 
   if (!user) return <Navigate to="/auth" replace />
-  if (profile && !profile.onboarding_complete) return <Navigate to="/onboarding" replace />
+  if (!profile || !profile.onboarding_complete) return <Navigate to="/onboarding" replace />
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background: '#080C14' }}>
@@ -32,6 +37,19 @@ export function AppLayout() {
       <main className="flex-1 max-w-[1440px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 pb-safe">
         <Outlet />
       </main>
+
+      {/* Global AI coach — floating button + drawer, reachable from any page */}
+      {!drawerOpen && location.pathname !== '/ai' && (
+        <button
+          onClick={() => openDrawer()}
+          aria-label="Open AI Coach"
+          className="fixed bottom-6 right-6 z-40 w-14 h-14 rounded-full flex items-center justify-center transition-transform hover:scale-105"
+          style={{ background: '#606C38', border: '1px solid rgba(96,108,56,0.5)', boxShadow: '0 8px 28px rgba(0,0,0,0.5)' }}
+        >
+          <Brain size={22} className="text-white" />
+        </button>
+      )}
+      {drawerOpen && <AIDrawer onClose={closeDrawer} />}
     </div>
   )
 }

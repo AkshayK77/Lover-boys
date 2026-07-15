@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { UIProvider } from '@/contexts/UIContext'
+import { WorkoutProvider } from '@/contexts/WorkoutContext'
+import { ToastProvider } from '@/components/ui/Toast'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { TrackerLayout } from '@/components/layout/TrackerLayout'
@@ -23,9 +25,11 @@ const WorkoutPage = lazy(() => import('@/pages/app/WorkoutPage'))
 const NutritionPage = lazy(() => import('@/pages/app/NutritionPage'))
 const ProgressPage = lazy(() => import('@/pages/app/ProgressPage'))
 const BodyLabPage = lazy(() => import('@/pages/app/BodyLabPage'))
+const LibraryPage = lazy(() => import('@/pages/app/LibraryPage'))
 const LearningPathsPage = lazy(() => import('@/pages/app/LearningPathsPage'))
 const MovementSciencePage = lazy(() => import('@/pages/app/MovementSciencePage'))
 const InjuryPreventionPage = lazy(() => import('@/pages/app/InjuryPreventionPage'))
+const AIPage = lazy(() => import('@/pages/app/AIPage'))
 
 function PageLoader() {
   return (
@@ -43,6 +47,8 @@ export default function App() {
     <BrowserRouter>
       <AuthProvider>
         <UIProvider>
+        <WorkoutProvider>
+        <ToastProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public */}
@@ -74,6 +80,7 @@ export default function App() {
                   <Route path="/nutrition" element={<NutritionPage />} />
                   <Route path="/progress" element={<ProgressPage />} />
                   <Route path="/anatomy" element={<BodyLabPage />} />
+                  <Route path="/exercises" element={<LibraryPage />} />
                 </Route>
 
                 <Route path="/learn" element={<LearningPathsPage />} />
@@ -81,7 +88,7 @@ export default function App() {
                 <Route path="/injury-prevention" element={<InjuryPreventionPage />} />
                 <Route path="/recovery" element={<PlaceholderPage title="Recovery" description="Recovery protocols, load management, and return-to-play guides — coming in Phase 2." phase={2} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
                 <Route path="/community" element={<PlaceholderPage title="Community" description="Reddit-style sport-tagged discussion with expert verification, upvotes, and image posts — coming in Phase 2." phase={2} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
-                <Route path="/ai" element={<PlaceholderPage title="AI Coach" description="Context-aware AI coach with your full training history, sport schedule, and movement science knowledge — coming in Phase 2." phase={2} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
+                <Route path="/ai" element={<AIPage />} />
                 <Route path="/library" element={<PlaceholderPage title="My Library" description="Saved lessons, articles, and training plans — coming in Phase 2." phase={2} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
                 <Route path="/profile" element={<PlaceholderPage title="My Profile" description="Personal info, sports, achievements, and certifications — coming in Phase 2." phase={2} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
                 <Route path="/settings" element={<PlaceholderPage title="Settings" description="Account, security, notifications, and privacy settings — coming in Phase 3." phase={3} cta={{ label: 'Back to Dashboard', to: '/dashboard' }} />} />
@@ -91,6 +98,8 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
+        </ToastProvider>
+        </WorkoutProvider>
         </UIProvider>
       </AuthProvider>
     </BrowserRouter>
